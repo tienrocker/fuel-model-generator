@@ -90,6 +90,9 @@ class Orm
 			{
 				$column_type = 'bool';
 			}
+                        
+                        if($column_type == 'text')
+                            $column_type = 'serialize';
 
 			// Basic Properties
 			$column_properties = array(
