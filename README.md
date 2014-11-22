@@ -15,18 +15,18 @@ To generate models for all of the tables in your database
 	php oil migrate orm 
 
 FuelPHP 1.72
-```sh
-php oil refine orm
-```
+
+	php oil refine orm
+
 
 To generate a model for just one table
 
 	php oil migrate orm:generate_model table_name
 	
 FuelPHP 1.72
-```sh
-php oil refine orm:generate_model **table_name**
-```
+
+	php oil refine orm:generate_model table_name
+
 
 ### ChangeLog
 [22/11/2014] Fixed enum field [tienrocker]
