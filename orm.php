@@ -72,6 +72,10 @@ class Orm
             }
         }
 
+        $primary_key = '';
+        $key = \DB::query("SHOW KEYS FROM {$table_name} WHERE Key_name = 'PRIMARY'")->execute();
+        foreach ($key as $k) $primary_key = $k['Column_name'];
+
         $columns = \DB::list_columns($table_name, null, $db);
 
         \Cli::write('Found ' . count($columns) . " columns for the {$table_name} database table.", 'green');
@@ -205,26 +209,49 @@ class Orm
         $model_str = <<<MODEL
 <?php
 
+/**
+ * Class {$table_class}
+
+MODEL;
+        foreach ($columns as $column) {
+            $model_str .= <<<MODEL
+ * @property {$column['type']} {$column['name']}
+
+MODEL;
+        }
+        $model_str .= <<<MODEL
+ */
 class Model_{$table_class} extends \Orm\Model
 {
 
 	protected static \$_table_name = '{$table_name}';
+	
+	protected static \$_primary_key = array('{$primary_key}');
 
 	protected static \$_properties = {$model_properties_str};
 
 	protected static \$_observers = array(
-		'Orm\Observer_Validation' => array(
+		'Orm\\Observer_Validation' => array(
             'events' => array('before_save'),
         ),
-		'Orm\Observer_Typing' => array(
+		'Orm\\Observer_Typing' => array(
             'events' => array('before_save', 'after_save', 'after_load'),
         ),
 MODEL;
 
+        if ($table_name === 'users') {
+            $model_str .= <<<MODEL
+
+		'Orm\\Observer_User' => array(
+	        'events' => array('after_save'),
+	    ),
+MODEL;
+        }
+
         if (isset($model_properties['created_at'])) {
             $model_str .= <<<MODEL
 
-		'Orm\Observer_CreatedAt' => array(
+		'Orm\\Observer_CreatedAt' => array(
 	        'events' => array('before_insert'),
 	        'mysql_timestamp' => false,
 	        'property' => 'created_at',
@@ -235,7 +262,7 @@ MODEL;
         if (isset($model_properties['updated_at'])) {
             $model_str .= <<<MODEL
 
-		'Orm\Observer_UpdatedAt' => array(
+		'Orm\\Observer_UpdatedAt' => array(
 	        'events' => array('before_save'),
 	        'mysql_timestamp' => false,
 	        'property' => 'updated_at',
